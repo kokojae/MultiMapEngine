@@ -136,7 +136,7 @@ void CALLBACK OnD3D9LostDevice( void* pUserContext )
 //--------------------------------------------------------------------------------------
 void CALLBACK OnD3D9DestroyDevice( void* pUserContext )
 {
-    SoundManager::EndAllSFX();
+    SoundManager::StopAllSFX();
     ObjectManager::Release();
     TextureManager::ReleaseTexture();
     GraphicManager::Release();

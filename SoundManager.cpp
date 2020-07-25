@@ -1,35 +1,51 @@
 #include "DXUT.h"
 #include "SoundManager.h"
-#include "SDKsound.h"
 
-CSoundManager* SoundManager::soundManager = nullptr;
-std::map<std::wstring, CSound*> SoundManager::soundMap = std::map<std::wstring, CSound*>();
+CSoundManager SoundManager::SFXManager = CSoundManager();
+std::multimap<std::wstring, CSound*> SoundManager::SFXMap = std::multimap<std::wstring, CSound*>();
+
+SoundManager::SoundManager()
+{
+}
+
+
+SoundManager::~SoundManager()
+{
+}
 
 void SoundManager::Init()
 {
-	soundManager = new CSoundManager;
-	soundManager->Initialize(DXUTGetHWND(), DSSCL_PRIORITY);
-	soundManager->SetPrimaryBufferFormat(2, 22050, 16);
+	SFXManager.Initialize(DXUTGetHWND(), DSSCL_PRIORITY);
+	SFXManager.SetPrimaryBufferFormat(2, 22050, 16);
+}
+
+void SoundManager::Release()
+{
+	std::multimap<std::wstring, CSound*>::iterator it = SFXMap.begin();
+
+	while (it != SFXMap.end())
+	{
+		it->second->Stop();
+		it->second->Reset();
+		SFXMap.erase(it++);
+	}
 }
 
 CSound* SoundManager::SearchSFX(std::wstring path)
 {
-	CSound* sfx;
+	CSound* sfx = nullptr;
+	auto pair = SFXMap.equal_range(path);
 
-	if (soundMap.count(path))
+	for (auto it = pair.first; it != pair.second; it++)
 	{
-		sfx = soundMap.find(path)->second;
+		if (it._Ptr->_Myval.second->IsSoundPlaying())
+			continue;
+		else
+			return sfx = it._Ptr->_Myval.second;
 	}
-	else
-	{
-		soundManager->Create(
-			&sfx,
-			const_cast<wchar_t*>(path.c_str()),
-			0,
-			GUID_NULL);
 
-		soundMap[path] = sfx;
-	}
+	SFXManager.Create(&sfx, const_cast<LPWSTR>(path.c_str()));
+	SFXMap.insert(std::pair<std::wstring, CSound*>(path, sfx));
 
 	return sfx;
 }
@@ -39,33 +55,30 @@ void SoundManager::PlaySFX(std::wstring path, bool isBGM)
 	CSound* sfx = SearchSFX(path);
 
 	if (isBGM)
-	{
 		sfx->Play(0, DSBPLAY_LOOPING);
-	}
 	else
-	{
-		sfx->Reset();
 		sfx->Play(0, NULL);
-	}
 }
 
-void SoundManager::EndSFX(std::wstring path)
+void SoundManager::StopSFX(std::wstring path)
 {
-	if (soundMap.count(path))
+	auto pair = SFXMap.equal_range(path);
+
+	for (auto it = pair.first; it != pair.second; it++)
 	{
-		CSound* sfx = soundMap.find(path)->second;
-		sfx->Stop();
-		sfx->Reset();
+		it._Ptr->_Myval.second->Stop();
+		it._Ptr->_Myval.second->Reset();
 	}
 }
 
-void SoundManager::EndAllSFX()
+void SoundManager::StopAllSFX()
 {
-	std::map<std::wstring, CSound*>::iterator it = soundMap.begin();
+	std::map<std::wstring, CSound*>::iterator it = SFXMap.begin();
 
-	while (it!=soundMap.end())
+	while (it != SFXMap.end())
 	{
 		it->second->Stop();
-		(it++)->second->Reset();
+		it->second->Reset();
+		it++;
 	}
 }

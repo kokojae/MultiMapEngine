@@ -65,6 +65,15 @@ void Player::GetKey()
 		Camera::degree += 5;
 	if (GetAsyncKeyState('A'))
 		Camera::degree -= 5;
+
+	if (GetAsyncKeyState('Z'))
+	{
+		SoundManager::PlaySFX(L"Source/test.wav", true);
+	}
+	if (GetAsyncKeyState('X'))
+	{
+		SoundManager::StopSFX(L"Source/test.wav");
+	}
 }
 
 void Player::Hspeed()

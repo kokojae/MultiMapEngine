@@ -13,7 +13,7 @@ void SceneManager::LoadScene(Scene scene)
 	Camera::scale = 1;
 
 	ObjectManager::Clear();
-	SoundManager::EndAllSFX();
+	SoundManager::StopAllSFX();
 
 	switch (scene)
 	{
